@@ -1,0 +1,231 @@
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+model User {
+  id           String         @id @default(cuid())
+  name         String
+  email        String         @unique
+  passwordHash String
+  role         String         @default("USER") // USER, CONTRIBUTOR, ADMIN
+  avatarUrl    String?
+  bio          String?
+  createdAt    DateTime       @default(now())
+  updatedAt    DateTime       @updatedAt
+
+  stories       Story[]
+  contributions Contribution[]
+  reviews       Review[]
+  favorites     Favorite[]
+  foodTrails    FoodTrail[]
+}
+
+model State {
+  id           String   @id @default(cuid())
+  code         String   @unique
+  name         String   @unique
+  hindiName    String?
+  bengaliName  String?
+  zone         String   // North, South, East, West, Northeast, Central
+  description  String
+  latitude     Float
+  longitude    Float
+  capital      String?
+  
+  dishes       Dish[]
+}
+
+model Dish {
+  id                     String           @id @default(cuid())
+  slug                   String           @unique
+  name                   String
+  localNames             String?          // JSON: [{"lang": "hi", "name": "..."}, {"lang": "bn", "name": "..."}]
+  stateId                String
+  state                  State            @relation(fields: [stateId], references: [id], onDelete: Cascade)
+  regionName             String?          // e.g. "Rarh Bengal", "Malabar", "Mewar", "Chettinad", "Braj"
+  cuisineType            String           // e.g. "Bengali", "Odia", "Assamese", "Chettinad", "Malabari", "Rajasthani", "Awadhi", "Kashmiri"
+  foodCategory           String           // "Main", "Dessert", "Staple", "Beverage", "Street Food", "Bread", "Snack", "Festival Food"
+  description            String
+  culturalSignificance   String
+  historicalBackground   String
+  traditionalPreparation String
+  seasonalAvailability   String?          // "All Season", "Winter", "Monsoon", "Harvest (Winter)", "Summer"
+  isGiTagged             Boolean          @default(false)
+  giTagDetails           String?
+  imageUrl               String
+  gallery                String?          // JSON array of image URLs
+  videoUrl               String?
+  verifiedStatus         String           @default("VERIFIED") // VERIFIED, COMMUNITY, AI_SUMMARIZED
+  viewsCount             Int              @default(0)
+  createdAt              DateTime         @default(now())
+  updatedAt              DateTime         @updatedAt
+
+  dishIngredients        DishIngredient[]
+  festivalDishes         FestivalDish[]
+  stories                Story[]
+  reviews                Review[]
+  favorites              Favorite[]
+  trailStops             FoodTrailStop[]
+}
+
+model Ingredient {
+  id                   String           @id @default(cuid())
+  slug                 String           @unique
+  name                 String
+  regionalNames        String?          // JSON array
+  originRegion         String?
+  botanicalName        String?
+  category             String           // "Grain", "Spice", "Vegetable", "Oil", "Herb", "Dairy", "Sweetener"
+  description          String
+  culturalSignificance String
+  seasonality          String?
+  imageUrl             String
+  healthAspects        String?
+  createdAt            DateTime         @default(now())
+
+  dishIngredients      DishIngredient[]
+}
+
+model DishIngredient {
+  id           String     @id @default(cuid())
+  dishId       String
+  dish         Dish       @relation(fields: [dishId], references: [id], onDelete: Cascade)
+  ingredientId String
+  ingredient   Ingredient @relation(fields: [ingredientId], references: [id], onDelete: Cascade)
+  isKey        Boolean    @default(false)
+  notes        String?
+  amount       String?
+
+  @@unique([dishId, ingredientId])
+}
+
+model Festival {
+  id               String         @id @default(cuid())
+  slug             String         @unique
+  name             String
+  regionalNames    String?        // JSON array
+  monthSeason      String         // e.g. "January (Magh / Poush)", "August/September (Chingam)"
+  significance     String
+  description      String
+  imageUrl         String
+  associatedStates String?        // JSON array of state codes/names
+  createdAt        DateTime       @default(now())
+
+  festivalDishes   FestivalDish[]
+}
+
+model FestivalDish {
+  id         String   @id @default(cuid())
+  festivalId String
+  festival   Festival @relation(fields: [festivalId], references: [id], onDelete: Cascade)
+  dishId     String
+  dish       Dish     @relation(fields: [dishId], references: [id], onDelete: Cascade)
+  ritualRole String?  // e.g. "Prasadam", "Harvest Feast centerpiece", "Post-fasting sacred meal"
+
+  @@unique([festivalId, dishId])
+}
+
+model Story {
+  id              String   @id @default(cuid())
+  title           String
+  storytellerName String
+  generation      String   // "Grandmother", "Grandfather", "Village Elder", "Family Archivist"
+  community       String?  // e.g. "Ghirni / Baidya family", "Iyengar community", "Marwari heritage"
+  location        String   // e.g. "Shantiniketan, West Bengal", "Alappuzha, Kerala"
+  content         String
+  audioUrl        String?
+  audioDuration   Int?     // Duration in seconds
+  transcript      String?
+  mediaUrl        String?
+  dishId          String?
+  dish            Dish?    @relation(fields: [dishId], references: [id], onDelete: SetNull)
+  userId          String?
+  user            User?    @relation(fields: [userId], references: [id], onDelete: SetNull)
+  status          String   @default("APPROVED") // PENDING, APPROVED, REJECTED
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+}
+
+model FoodTrail {
+  id                String          @id @default(cuid())
+  title             String
+  slug              String          @unique
+  cityState         String          // e.g. "Kolkata, West Bengal", "Old Delhi, Delhi"
+  description       String
+  estimatedDuration String          // e.g. "Half-day (4-5 hours)", "Full day"
+  bestTime          String          // e.g. "Early Morning / Winter Evenings"
+  imageUrl          String
+  userId            String?
+  user              User?           @relation(fields: [userId], references: [id], onDelete: SetNull)
+  isPublished       Boolean         @default(true)
+  createdAt         DateTime        @default(now())
+  updatedAt         DateTime        @updatedAt
+
+  stops             FoodTrailStop[]
+}
+
+model FoodTrailStop {
+  id                String    @id @default(cuid())
+  trailId           String
+  trail             FoodTrail @relation(fields: [trailId], references: [id], onDelete: Cascade)
+  orderIndex        Int
+  placeName         String
+  specialtyDishId   String?
+  specialtyDish     Dish?     @relation(fields: [specialtyDishId], references: [id], onDelete: SetNull)
+  specialtyDishName String
+  historicalNote    String
+  latitude          Float
+  longitude         Float
+  imageUrl          String?
+}
+
+model Contribution {
+  id          String   @id @default(cuid())
+  userId      String
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  type        String   // "DISH", "RECIPE", "STORY", "INGREDIENT", "CORRECTION"
+  title       String
+  dataPayload String   // JSON containing fields submitted by user
+  status      String   @default("PENDING") // PENDING, APPROVED, REJECTED
+  adminNotes  String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model Favorite {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  dishId    String
+  dish      Dish     @relation(fields: [dishId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+
+  @@unique([userId, dishId])
+}
+
+model Review {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  dishId    String
+  dish      Dish     @relation(fields: [dishId], references: [id], onDelete: Cascade)
+  rating    Int      @default(5)
+  comment   String
+  createdAt DateTime @default(now())
+}
+
+model AIKnowledgeDocument {
+  id        String   @id @default(cuid())
+  title     String
+  topic     String   // "History", "Festival", "Technique", "GI Tag", "Philosophy", "Regional Cuisine"
+  content   String
+  source    String   // Reference literature, archival record, culinary historian text
+  state     String?
+  tags      String?  // JSON array
+  createdAt DateTime @default(now())
+}

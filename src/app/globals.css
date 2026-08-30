@@ -1,0 +1,74 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --background: #FDFBF7;
+    --foreground: #1E1B18;
+    --terracotta: #C84B31;
+    --saffron: #FF7B54;
+    --amber: #F4A261;
+    --turmeric: #E9C46A;
+  }
+
+  body {
+    background-color: var(--background);
+    color: var(--foreground);
+    font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  }
+}
+
+/* Custom scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+::-webkit-scrollbar-track {
+  background: #F5EFEB;
+}
+::-webkit-scrollbar-thumb {
+  background: #D4A373;
+  border-radius: 4px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #C84B31;
+}
+
+/* Indian Motifs & Cultural Badges */
+.bg-mandala {
+  background-image: radial-gradient(#D4A373 0.75px, transparent 0.75px), radial-gradient(#D4A373 0.75px, #FDFBF7 0.75px);
+  background-size: 24px 24px;
+  background-position: 0 0, 12px 12px;
+}
+
+.badge-gi {
+  background: linear-gradient(135deg, #FF7B54 0%, #C84B31 100%);
+  color: #FFFFFF;
+  box-shadow: 0 2px 6px rgba(200, 75, 49, 0.25);
+}
+
+.badge-verified {
+  background: linear-gradient(135deg, #2A9D8F 0%, #264653 100%);
+  color: #FFFFFF;
+}
+
+.badge-community {
+  background: linear-gradient(135deg, #E9C46A 0%, #F4A261 100%);
+  color: #1E1B18;
+}
+
+/* Leaflet Map overrides */
+.leaflet-container {
+  width: 100%;
+  height: 100%;
+  border-radius: 1rem;
+  background: #EAE3D2;
+}
+
+.leaflet-popup-content-wrapper {
+  background: #FFFFFF;
+  border-radius: 0.75rem;
+  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.15);
+  font-family: inherit;
+}
